@@ -1,25 +1,59 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
-  html_document:
-    keep_md: true
+title: "PA1_template.Rmd"
+output: html_document
 ---
 
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+setwd("~/JHU DataScience Courses/R Directory/RepData_PeerAssessment1")
+library(data.table)
+library(dplyr)
+```
 
-## Loading and preprocessing the data
+# Step Activity Analysis  
+####For this assignment we are going to be looking at step data taken over time per five minute intervals.  
+  
+#### Cleaning the data  
+For this section we are going to be looking at the data on a daily basis, therefore we will need to group the data by date and drop any NA values in the dataset. We do that using the dplyr and data.table packages.
+It is now time to load in the dataset and then filter it, group it, summarise it and select it to fit our needs. 
+
+```{r}
+activity = data.table(read.csv('activity.csv'))
+
+grouped_day = activity %>% 
+    filter(!is.na(steps)) %>% 
+    group_by(date) %>% 
+    summarise_each(funs(sum)) %>% 
+    select(date,steps)
+
+grouped_interval = activity %>% 
+    filter(!is.na(steps)) %>% 
+    group_by(interval) %>% 
+    summarise_each(funs(mean)) %>% 
+    select(interval,steps)
+```
+
+####Now that we have the data loaded in and transformed into the shape that we need, its time to plot it out as requested. We will be doing the following things:  
+1.Make a histogram of the total number of steps taken each day.  
+2.Calculate and report the mean and median total number of steps taken per day. 
+
+```{r, grouped_day}
+hist(grouped_day$steps)
+
+Mean = paste('Mean: ',mean(grouped_day$steps))
+Median = paste('Median: ',median(grouped_day$steps))
+print(c(Mean,Median))
+```  
+###For the second step in the analysis, we will be doing the following things:  
+1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).  
+2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
 
 
 
-## What is mean total number of steps taken per day?
 
 
 
-## What is the average daily activity pattern?
 
 
 
-## Imputing missing values
 
-
-
-## Are there differences in activity patterns between weekdays and weekends?
