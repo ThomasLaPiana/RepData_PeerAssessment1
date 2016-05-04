@@ -45,7 +45,38 @@ IntervalImpute = function(data_set){
 complete_activity = IntervalImpute(activity)
 
 
+## Convert the complete_activity date column to dates
+complete_activity$date = ymd(complete_activity$date)
 
+## Mutate a new column to show whether it is a weekday or not
+complete_activity = complete_activity %>% 
+    mutate(weekday = ifelse(wday(date) > 1 & wday(date) < 7,TRUE,FALSE)) %>% 
+    mutate(DayOfWeek = wday(date,label=TRUE))
 
+## Group the complete data by 5-minute interval and weekday or weekend
+complete_weekday = complete_activity %>% 
+    filter(weekday == TRUE) %>% 
+    group_by(interval) %>% 
+    summarise_each(funs(mean)) %>% 
+    select(interval,steps)
 
+complete_weekend = complete_activity %>% 
+    filter(weekday == FALSE) %>% 
+    group_by(interval) %>% 
+    summarise_each(funs(mean)) %>% 
+    select(interval,steps)
 
+## Create the Plot
+par(mfrow=c(2,1))
+
+plot(complete_weekend$interval,complete_weekend$steps,
+     type = 'l',
+     ylab = 'Avg. Number of Steps',
+     xlab = 'Interval',
+     main='Weekend')
+
+plot(complete_weekday$interval,complete_weekday$steps,
+     type = 'l',
+     ylab = 'Avg. Number of Steps',
+     xlab = 'Interval',
+     main='Weekday')
