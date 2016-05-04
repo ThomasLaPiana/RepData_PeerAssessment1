@@ -7,9 +7,6 @@ library(Amelia)
 ## Load in the data
 activity = data.table(read.csv('activity.csv'))
 
-## FIll in the missing values for later use
-activity = 
-
 ## Group the data by day
 grouped_day = activity %>% filter(!is.na(steps)) %>% group_by(date) %>% summarise_each(funs(sum)) %>% select(date,steps)
 
@@ -29,4 +26,20 @@ head(arrange(grouped_interval,desc(steps)),1)
 
 ## Perform Step 3 Analysis 
 print(sum(is.na(activity$steps)))
-imputed_activity = 
+
+## Create a function that imputes data with the mean of the interval's steps
+IntervalImpute = function(data_set){
+    unique_intervals = unique(data_set$interval)
+    filtered_interval = {}
+    complete_data_set = data_set
+    
+    for(interv in unique_intervals){
+        only_steps = data_set %>% filter(interval == interv & !is.na(steps)) %>% select(steps)
+        steps_mean = mean(only_steps$steps)
+        complete_data_set = complete_data_set %>% 
+            mutate(steps = ifelse(is.na(steps) & interval == interv & is.na(steps), steps_mean,steps))
+    }
+    
+    return(complete_data_set)
+}
+complete_activity = IntervalImpute(activity)
