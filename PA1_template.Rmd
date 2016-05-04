@@ -37,7 +37,7 @@ grouped_interval = activity %>%
 1.Make a histogram of the total number of steps taken each day.  
 2.Calculate and report the mean and median total number of steps taken per day. 
 
-```{r, grouped_day}
+```{r}
 hist(grouped_day$steps)
 
 Mean = paste('Mean: ',mean(grouped_day$steps))
@@ -47,18 +47,60 @@ print(c(Mean,Median))
 ###For the second step in the analysis, we will be doing the following things:  
 1. Make a time series plot (i.e. type = "l") of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis).  
 2. Which 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps?
-```{r, grouped_interval}
+```{r}
 plot(grouped_interval$interval,grouped_interval$steps,
      type = 'l')
 head(arrange(grouped_interval,desc(steps)),1)
 ```  
 ###Now that we've finished that, we are going to impute values for the NA steps and see if that affects our previous findings at all.  
-####For methodology, we are going to simply use the median steaks for that 5-minute interval to impute the data. 
+####For methodology, we are going to simply use the median steaks for that 5-minute interval to impute the data. But before that, lets take a look at how many NA values we have in our data.
 ```{r}
+print(sum(is.na(activity$steps)))
 ```
+####Now for the fun part, imputing the missing values. IntervalImpute is a custom function that will replace NA values with the median steps taken for that interval across all days. 
+```{r}
+## Create a function that imputes data with the mean of the interval's steps
+IntervalImpute = function(data_set){
+    unique_intervals = unique(data_set$interval)
+    filtered_interval = {}
+    complete_data_set = data_set
+    
+    for(interv in unique_intervals){
+        only_steps = data_set %>% filter(interval == interv & !is.na(steps)) %>% select(steps)
+        steps_mean = mean(only_steps$steps)
+        complete_data_set = complete_data_set %>% 
+            mutate(steps = ifelse(is.na(steps) & interval == interv & is.na(steps), steps_mean,steps))
+    }
+    
+    return(complete_data_set)
+}
+complete_activity = IntervalImpute(activity)
+head(activity)
+head(complete_activity)
+```
+####For the sake of comparison I've included a head() command for the dataset with missing values (activity) as well as the complete dataset (complete_activity).  
+####*The big question though is whether or not imputing these values has any substantial effect on the insights we achieve from our data. Let's take a look at a histogram that is set up identically to the one from problem 1.*
+```{r}
+grouped_day = complete_activity %>% 
+    filter(!is.na(steps)) %>% 
+    group_by(date) %>% 
+    summarise_each(funs(sum)) %>% 
+    select(date,steps)
 
+hist(grouped_day$steps)
 
+Mean = paste('Mean: ',mean(grouped_day$steps))
+Median = paste('Median: ',median(grouped_day$steps))
+print(c(Mean,Median))
 
+```
+####Are you as surprised by the results as I am? From at least a visual standpoint, the histograms show exactly the same trend.  
+####*Finally, let's take a look at the steps taken during the weekdays versus the weekends. Do you think we'll see any significant trends?*  
+####We will be making judicious use of the 'lubridate' package for this section.
+```{r}
+library(lubridate)
+
+```
 
 
 
